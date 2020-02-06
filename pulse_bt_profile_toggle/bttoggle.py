@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-import notify2
+from jeepney import DBusAddress, new_method_call
+from jeepney.integrate.blocking import connect_and_authenticate
 import pulsectl
 
 APP_NAME = "Bluetooth audio profile toggle"
@@ -12,13 +13,32 @@ def get_icon_for_profile(profile):
         return "audio-headphones-symbolic"
 
 
-def send_notification(text, icon="dialog-info"):
-    notify2.init(APP_NAME)
-    n = notify2.Notification(text, icon=icon)
-    n.timeout = notify2.EXPIRES_DEFAULT
-    n.hints["transient"] = True
-    n.hints["category"] = "device"
-    n.show()
+def send_notification(text, info='', icon="dialog-info"):
+    notifications = DBusAddress('/org/freedesktop/Notifications',
+                                bus_name='org.freedesktop.Notifications',
+                                interface='org.freedesktop.Notifications')
+    connection = connect_and_authenticate(bus='SESSION')
+    # Construct a new D-Bus message. new_method_call takes the address, the
+    # method name, the signature string, and a tuple of arguments.
+    msg = new_method_call(
+        notifications, 'Notify', r'susssasa{sv}i',
+        (
+            APP_NAME,  # App name
+            0,  # Not replacing any previous notification
+            icon or '',  # Icon
+            text,  # Summary
+            info,  # more info (optional)
+            [],  # Actions
+            # FIXME non-empty hints somehow do not work for now
+            # may be need some typing via Variant
+            # {"category": "device", "transient": True},  # Hints
+            {},  # Hints
+            -1,      # expire_timeout (-1 = default)
+        )
+    )
+    # Not actually interested in reply
+    connection.send_and_get_reply(msg)
+    connection.close()
 
 
 def toggle():
