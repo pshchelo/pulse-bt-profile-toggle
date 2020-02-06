@@ -1,2 +1,3 @@
+dbus-python
+notify2
 pulsectl
-PyGObject
