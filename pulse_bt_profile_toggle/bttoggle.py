@@ -29,10 +29,7 @@ def send_notification(text, info='', icon="dialog-info"):
             text,  # Summary
             info,  # more info (optional)
             [],  # Actions
-            # FIXME non-empty hints somehow do not work for now
-            # may be need some typing via Variant
-            # {"category": "device", "transient": True},  # Hints
-            {},  # Hints
+            {"transient": ("b", True), "category": ("s", "device")},  # Hints
             -1,      # expire_timeout (-1 = default)
         )
     )
